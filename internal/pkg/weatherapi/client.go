@@ -1,6 +1,7 @@
 package weatherapi
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -19,7 +20,7 @@ func New() weather.TemperatureFetcher {
 	}
 }
 
-func (c *Client) FetchTemperature(location string) (float64, error) {
+func (c *Client) FetchTemperature(ctx context.Context, location string) (float64, error) {
 	apiKey := os.Getenv("WEATHERAPI_KEY")
 	url := fmt.Sprintf("http://api.weatherapi.com/v1/current.json?key=%s&q=%s", apiKey, location)
 

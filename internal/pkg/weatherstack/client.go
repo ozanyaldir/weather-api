@@ -1,6 +1,7 @@
 package weatherstack
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -21,7 +22,7 @@ func New() weather.TemperatureFetcher {
 	}
 }
 
-func (c *Client) FetchTemperature(location string) (float64, error) {
+func (c *Client) FetchTemperature(ctx context.Context, location string) (float64, error) {
 	apiKey := os.Getenv("WEATHERSTACK_KEY")
 
 	url := fmt.Sprintf(

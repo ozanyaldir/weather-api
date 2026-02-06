@@ -1,5 +1,7 @@
 package weather
 
+import "context"
+
 type TemperatureFetcher interface {
-	FetchTemperature(city string) (float64, error)
+	FetchTemperature(ctx context.Context, location string) (float64, error)
 }

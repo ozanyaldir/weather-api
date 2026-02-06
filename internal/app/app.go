@@ -1,7 +1,6 @@
 package app
 
 import (
-	"weather-api/internal/database"
 	"weather-api/internal/handler"
 	"weather-api/internal/orchestrator"
 	"weather-api/internal/pkg/weatherapi"
@@ -9,24 +8,39 @@ import (
 	"weather-api/internal/repository"
 	"weather-api/internal/route"
 	"weather-api/internal/service"
+	"weather-api/internal/weather"
 
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 )
 
-func Bootstrap(fiberCfg fiber.Config) *fiber.App {
-	wAPI := weatherapi.New()
-	wStack := weatherstack.New()
+type Config struct {
+	Fiber   fiber.Config
+	DB      *gorm.DB
+	Weather weather.TemperatureFetcher
+	Stack   weather.TemperatureFetcher
+}
 
-	wRepo := repository.NewWeatherQueryRepository(database.DB)
+func Bootstrap(cfg Config) *fiber.App {
+	wAPI := cfg.Weather
+	if wAPI == nil {
+		wAPI = weatherapi.New()
+	}
 
+	wStack := cfg.Stack
+	if wStack == nil {
+		wStack = weatherstack.New()
+	}
+
+	wRepo := repository.NewWeatherQueryRepository(cfg.DB)
 	wService := service.NewWeatherService(wAPI, wStack)
-
-	wOrch := orchestrator.NewWeatherOrchestrator(wService, wRepo)
+	wBatch := service.NewWeatherBatchService(wService)
+	wOrch := orchestrator.NewWeatherOrchestrator(wBatch, wRepo)
 
 	wHandler := handler.NewWeatherHandler(wOrch)
 	hHandler := handler.NewHealthHandler()
 
-	app := fiber.New(fiberCfg)
+	app := fiber.New(cfg.Fiber)
 	route.Register(app, wHandler, hHandler)
 
 	return app

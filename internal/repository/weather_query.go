@@ -1,8 +1,7 @@
 package repository
 
 import (
-	"time"
-	"weather-api/internal/model"
+	"weather-api/internal/entity"
 
 	"gorm.io/gorm"
 )
@@ -22,12 +21,11 @@ func NewWeatherQueryRepository(db *gorm.DB) *WeatherQueryRepository {
 }
 
 func (r *WeatherQueryRepository) Create(location string, s1Temp, s2Temp float64, count int) error {
-	query := model.WeatherQuery{
+	query := entity.WeatherQuery{
 		Location:            location,
 		Service1Temperature: s1Temp,
 		Service2Temperature: s2Temp,
 		RequestCount:        count,
-		CreatedAt:           time.Now(),
 	}
 
 	return r.db.Create(&query).Error

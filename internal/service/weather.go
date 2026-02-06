@@ -1,12 +1,13 @@
 package service
 
 import (
+	"context"
 	"fmt"
 	"weather-api/internal/weather"
 )
 
 type IWeatherService interface {
-	FetchBoth(location string) (float64, float64, error)
+	FetchBoth(ctx context.Context, location string) (float64, float64, error)
 }
 
 type WeatherService struct {
@@ -21,7 +22,7 @@ func NewWeatherService(api weather.TemperatureFetcher, stack weather.Temperature
 	}
 }
 
-func (s *WeatherService) FetchBoth(location string) (float64, float64, error) {
+func (s *WeatherService) FetchBoth(ctx context.Context, location string) (float64, float64, error) {
 	type result struct {
 		temp float64
 		err  error
@@ -31,21 +32,25 @@ func (s *WeatherService) FetchBoth(location string) (float64, float64, error) {
 	ch2 := make(chan result, 1)
 
 	go func() {
-		t, err := s.weatherApiClient.FetchTemperature(location)
+
+		t, err := s.weatherApiClient.FetchTemperature(ctx, location)
 		ch1 <- result{t, err}
 	}()
 
 	go func() {
-		t, err := s.weatherStackClient.FetchTemperature(location)
+
+		t, err := s.weatherStackClient.FetchTemperature(ctx, location)
 		ch2 <- result{t, err}
 	}()
 
-	r1 := <-ch1
-	r2 := <-ch2
-
-	if r1.err != nil || r2.err != nil {
-		return 0, 0, fmt.Errorf("one or both services failed")
+	select {
+	case <-ctx.Done():
+		return 0, 0, ctx.Err()
+	case r1 := <-ch1:
+		r2 := <-ch2
+		if r1.err != nil || r2.err != nil {
+			return 0, 0, fmt.Errorf("one or both services failed")
+		}
+		return r1.temp, r2.temp, nil
 	}
-
-	return r1.temp, r2.temp, nil
 }

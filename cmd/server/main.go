@@ -8,6 +8,8 @@ import (
 	"weather-api/internal/app"
 	"weather-api/internal/database"
 	"weather-api/internal/middleware"
+	"weather-api/internal/pkg/weatherapi"
+	"weather-api/internal/pkg/weatherstack"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -34,7 +36,15 @@ func main() {
 		AppName:      "weather-api v1.0",
 	}
 
-	server := app.Bootstrap(fiberCfg)
+	wAPI := weatherapi.New()
+	wStack := weatherstack.New()
+
+	server := app.Bootstrap(app.Config{
+		Fiber:   fiberCfg,
+		DB:      database.DB,
+		Weather: wAPI,
+		Stack:   wStack,
+	})
 
 	server.Use(recover.New())
 	server.Use(cors.New())

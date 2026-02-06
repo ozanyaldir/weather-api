@@ -22,7 +22,7 @@ run:
 
 test:
 	@echo "Running tests..."
-	go test -v ./...
+	go test ./test/...
 
 fmt:
 	@echo "Formatting code..."
