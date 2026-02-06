@@ -39,6 +39,29 @@ func Connect() error {
 	return nil
 }
 
+func InitSchema() error {
+	query := `
+		CREATE TABLE IF NOT EXISTS weather_queries (
+			id INT AUTO_INCREMENT PRIMARY KEY,
+			location VARCHAR(255) NOT NULL,
+			service_1_temperature FLOAT NOT NULL,
+			service_2_temperature FLOAT NOT NULL,
+			request_count INT NOT NULL,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			INDEX idx_location (location),
+			INDEX idx_created_at (created_at)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+	`
+
+	_, err := DB.Exec(query)
+	if err != nil {
+		return fmt.Errorf("error creating table: %w", err)
+	}
+
+	log.Println("Database schema initialized successfully")
+	return nil
+}
+
 func Close() error {
 	if DB != nil {
 		return DB.Close()
