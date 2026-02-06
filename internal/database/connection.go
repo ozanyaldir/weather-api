@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 	"time"
-	"weather-api/internal/models"
+	"weather-api/internal/model"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -47,7 +47,7 @@ func Connect() error {
 
 func InitSchema() error {
 	if err := DB.AutoMigrate(
-		&models.WeatherQuery{},
+		&model.WeatherQuery{},
 	); err != nil {
 		return fmt.Errorf("failed to migrate schema: %w", err)
 	}

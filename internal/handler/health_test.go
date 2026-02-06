@@ -1,6 +1,7 @@
-package handlers
+package handler
 
 import (
+	"encoding/json"
 	"io"
 	"net/http/httptest"
 	"testing"
@@ -10,10 +11,12 @@ import (
 
 func TestHealthCheck(t *testing.T) {
 	app := fiber.New()
-	app.Get("/health", HealthCheck)
+	handler := NewHealthHandler()
+
+	app.Get("/health", handler.HealthCheck)
 
 	req := httptest.NewRequest("GET", "/health", nil)
-	resp, err := app.Test(req)
+	resp, err := app.Test(req, -1)
 
 	if err != nil {
 		t.Fatalf("Failed to test request: %v", err)
@@ -24,8 +27,14 @@ func TestHealthCheck(t *testing.T) {
 	}
 
 	body, _ := io.ReadAll(resp.Body)
-	if len(body) == 0 {
-		t.Error("Response body should not be empty")
+
+	var responseData map[string]string
+	if err := json.Unmarshal(body, &responseData); err != nil {
+		t.Fatalf("Failed to decode JSON: %v", err)
+	}
+
+	if responseData["status"] != "ok" {
+		t.Errorf("Expected status 'ok', got '%s'", responseData["status"])
 	}
 }
 

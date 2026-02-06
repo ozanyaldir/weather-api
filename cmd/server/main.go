@@ -5,9 +5,9 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"weather-api/internal/app"
 	"weather-api/internal/database"
 	"weather-api/internal/middleware"
-	"weather-api/internal/routes"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -29,16 +29,16 @@ func main() {
 		log.Fatalf("Failed to initialize database schema: %v", err)
 	}
 
-	app := fiber.New(fiber.Config{
+	fiberCfg := fiber.Config{
 		ErrorHandler: middleware.ErrorHandler,
 		AppName:      "weather-api v1.0",
-	})
+	}
 
-	app.Use(recover.New())
-	app.Use(cors.New())
-	app.Use(middleware.Logger())
+	server := app.Bootstrap(fiberCfg)
 
-	routes.Register(app)
+	server.Use(recover.New())
+	server.Use(cors.New())
+	server.Use(middleware.Logger())
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -47,7 +47,7 @@ func main() {
 
 	go func() {
 		log.Printf("Server starting on port %s", port)
-		if err := app.Listen(":" + port); err != nil {
+		if err := server.Listen(":" + port); err != nil {
 			log.Fatalf("Failed to start server: %v", err)
 		}
 	}()
@@ -57,7 +57,7 @@ func main() {
 	<-quit
 
 	log.Println("Shutting down server...")
-	if err := app.Shutdown(); err != nil {
+	if err := server.Shutdown(); err != nil {
 		log.Fatalf("Server forced to shutdown: %v", err)
 	}
 

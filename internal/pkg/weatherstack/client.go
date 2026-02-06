@@ -6,17 +6,14 @@ import (
 	"net/http"
 	"os"
 	"time"
+	"weather-api/internal/weather"
 )
-
-type TemperatureFetcher interface {
-	FetchTemperature(location string) (float64, error)
-}
 
 type Client struct {
 	httpClient *http.Client
 }
 
-func New() TemperatureFetcher {
+func New() weather.TemperatureFetcher {
 	return &Client{
 		httpClient: &http.Client{
 			Timeout: 10 * time.Second,
