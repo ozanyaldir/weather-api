@@ -1,19 +1,22 @@
 package database
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"os"
 	"time"
+	"weather-api/internal/models"
 
-	_ "github.com/go-sql-driver/mysql"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
-var DB *sql.DB
+var DB *gorm.DB
 
 func Connect() error {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true",
+	dsn := fmt.Sprintf(
+		"%s:%s@tcp(%s:%s)/%s?parseTime=true&charset=utf8mb4&loc=Local",
 		os.Getenv("DB_USER"),
 		os.Getenv("DB_PASSWORD"),
 		os.Getenv("DB_HOST"),
@@ -22,40 +25,31 @@ func Connect() error {
 	)
 
 	var err error
-	DB, err = sql.Open("mysql", dsn)
+	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Warn),
+	})
 	if err != nil {
-		return fmt.Errorf("error opening database: %w", err)
+		return fmt.Errorf("failed to connect to database: %w", err)
 	}
 
-	DB.SetMaxOpenConns(25)
-	DB.SetMaxIdleConns(5)
-	DB.SetConnMaxLifetime(5 * time.Minute)
-
-	if err = DB.Ping(); err != nil {
-		return fmt.Errorf("error connecting to database: %w", err)
+	sqlDB, err := DB.DB()
+	if err != nil {
+		return err
 	}
+
+	sqlDB.SetMaxOpenConns(25)
+	sqlDB.SetMaxIdleConns(5)
+	sqlDB.SetConnMaxLifetime(5 * time.Minute)
 
 	log.Println("Database connected successfully")
 	return nil
 }
 
 func InitSchema() error {
-	query := `
-		CREATE TABLE IF NOT EXISTS weather_queries (
-			id INT AUTO_INCREMENT PRIMARY KEY,
-			location VARCHAR(255) NOT NULL,
-			service_1_temperature FLOAT NOT NULL,
-			service_2_temperature FLOAT NOT NULL,
-			request_count INT NOT NULL,
-			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-			INDEX idx_location (location),
-			INDEX idx_created_at (created_at)
-		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-	`
-
-	_, err := DB.Exec(query)
-	if err != nil {
-		return fmt.Errorf("error creating table: %w", err)
+	if err := DB.AutoMigrate(
+		&models.WeatherQuery{},
+	); err != nil {
+		return fmt.Errorf("failed to migrate schema: %w", err)
 	}
 
 	log.Println("Database schema initialized successfully")
@@ -63,8 +57,14 @@ func InitSchema() error {
 }
 
 func Close() error {
-	if DB != nil {
-		return DB.Close()
+	if DB == nil {
+		return nil
 	}
-	return nil
+
+	sqlDB, err := DB.DB()
+	if err != nil {
+		return err
+	}
+
+	return sqlDB.Close()
 }

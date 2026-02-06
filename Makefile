@@ -1,4 +1,4 @@
-.PHONY: help run setup
+.PHONY: help run setup test
 
 help:
 	@echo 'Usage: make [target]'
@@ -19,6 +19,10 @@ setup:
 run:
 	@echo "Starting application..."
 	go run cmd/server/main.go
+
+test:
+	@echo "Running tests..."
+	go test -v ./...
 
 fmt:
 	@echo "Formatting code..."
