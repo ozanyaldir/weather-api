@@ -1,7 +1,7 @@
 package service_test
 
 import (
-	"context" // Added
+	"context"
 	"testing"
 	"weather-api/internal/service"
 	"weather-api/test/mock"
@@ -13,7 +13,6 @@ func TestWeatherService_FetchBoth_ParallelSuccess(t *testing.T) {
 
 	svc := service.NewWeatherService(apiClient, stackClient)
 
-	// FIX: Pass context.Background()
 	t1, t2, err := svc.FetchBoth(context.Background(), "istanbul")
 
 	if err != nil {
@@ -33,7 +32,6 @@ func TestWeatherService_FetchBoth_OneFails(t *testing.T) {
 
 	svc := service.NewWeatherService(apiClient, stackClient)
 
-	// FIX: Pass context.Background()
 	_, _, err := svc.FetchBoth(context.Background(), "istanbul")
 
 	if err == nil {

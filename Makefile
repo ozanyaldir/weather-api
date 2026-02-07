@@ -28,3 +28,12 @@ fmt:
 	@echo "Formatting code..."
 	go fmt ./...
 	@echo "Format complete!"
+
+docker-build:
+	@echo "Building Docker image..."
+	docker build -t weather-api:latest .
+	@echo "Docker image built!"
+
+docker-run:
+	@echo "Running Docker container..."
+	docker-compose up --build
