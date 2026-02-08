@@ -1,17 +1,18 @@
-package handler
+package handler_test
 
 import (
 	"encoding/json"
 	"io"
 	"net/http/httptest"
 	"testing"
+	"weather-api/internal/handler"
 
 	"github.com/gofiber/fiber/v2"
 )
 
 func TestHealthCheck(t *testing.T) {
 	app := fiber.New()
-	handler := NewHealthHandler()
+	handler := handler.NewHealthHandler()
 
 	app.Get("/health", handler.HealthCheck)
 
@@ -39,7 +40,7 @@ func TestHealthCheck(t *testing.T) {
 }
 
 func TestNewHealthHandler(t *testing.T) {
-	handler := NewHealthHandler()
+	handler := handler.NewHealthHandler()
 
 	if handler == nil {
 		t.Fatal("Handler should not be nil")
